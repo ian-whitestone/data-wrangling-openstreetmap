@@ -1,5 +1,3 @@
-
-
 import csv
 import codecs
 import pprint
@@ -10,7 +8,7 @@ import cerberus
 
 import schema
 
-OSM_PATH = "example.osm"
+OSM_PATH = "toronto_map.osm"
 
 NODES_PATH = "nodes.csv"
 NODE_TAGS_PATH = "nodes_tags.csv"
@@ -64,7 +62,7 @@ def get_element(osm_file, tags=('node', 'way', 'relation')):
 def validate_element(element, validator, schema=SCHEMA):
     """Raise ValidationError if element does not match schema"""
     if validator.validate(element, schema) is not True:
-        field, errors = next(validator.errors.iteritems())
+        field, errors = next(validator.errors.items())
         message_string = "\nElement of type '{0}' has the following errors:\n{1}"
         error_string = pprint.pformat(errors)
 
@@ -76,7 +74,7 @@ class UnicodeDictWriter(csv.DictWriter, object):
 
     def writerow(self, row):
         super(UnicodeDictWriter, self).writerow({
-            k: (v.encode('utf-8') if isinstance(v, unicode) else v) for k, v in row.iteritems()
+            k: (v.encode('utf-8') if isinstance(v, str) else v) for k, v in row.items()
         })
 
     def writerows(self, rows):
@@ -128,26 +126,4 @@ def process_map(file_in, validate):
 if __name__ == '__main__':
     # Note: Validation is ~ 10X slower. For the project consider using a small
     # sample of the map when validating.
-    process_map(OSM_PATH, validate=True)
-
-
-import xml.etree.ElementTree as ET
-
-osm_file = "toronto_map.osm"
-
-
-def get_tree(fname):
-    tree = ET.parse(fname)
-    return tree
-
-tree = get_tree(osm_file)
-
-root=tree.getroot()
-
-nodes=root.findall('./node')
-
-for x in nodes[0].iter('tag'):
-    print (x)
-
-# for tag in tree.getroot():
-    # print (tag)
+    process_map(OSM_PATH, validate=False)
