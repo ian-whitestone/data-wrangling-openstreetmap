@@ -1,3 +1,4 @@
 *.osm
 *.db
 *.txt
+.csv

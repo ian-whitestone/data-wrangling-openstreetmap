@@ -3,6 +3,7 @@ import codecs
 import pprint
 import re
 import xml.etree.cElementTree as ET
+import time
 
 import cerberus
 
@@ -29,6 +30,35 @@ WAY_TAGS_FIELDS = ['id', 'key', 'value', 'type']
 WAY_NODES_FIELDS = ['id', 'node_id', 'position']
 
 
+def parse_tags(id,tags):
+    tag_fields=['id', 'key', 'value', 'type'] ##check what type is?
+    tag_fields = ['k','v']
+    ##- type: either the characters before the colon in the tag "k" value or "regular" if a colon is not present.
+
+    tags_list=[]
+    for tag in tags:
+        tag_type=tag.attrib.get('k','regular')
+        split_tag=tag_type.split(':')
+        if len(split_tag)==1:
+            tag_type='regular'
+            key=tag.attrib.get('k',None)
+        else:
+            tag_type=split_tag[0]
+            key=':'.join(split_tag[1:])
+
+        tags_list.append({'id':id,'key':key,'value':tag.attrib.get('v',None),'type':tag_type})
+
+    return tags_list
+
+def parse_way_nodes(id,nodes):
+    WAY_NODES_FIELDS = ['id', 'node_id', 'position']
+    nodes_list=[]
+
+    for i,nd in enumerate(nodes):
+        nodes_list.append({'id':id,'node_id':nd.attrib.get('ref',None),'position':i})
+
+    return nodes_list
+
 def shape_element(element, node_attr_fields=NODE_FIELDS, way_attr_fields=WAY_FIELDS,
                   problem_chars=PROBLEMCHARS, default_tag_type='regular'):
     """Clean and shape node or way XML element to Python dict"""
@@ -38,10 +68,15 @@ def shape_element(element, node_attr_fields=NODE_FIELDS, way_attr_fields=WAY_FIE
     way_nodes = []
     tags = []  # Handle secondary tags the same way for both node and way elements
 
-    # YOUR CODE HERE
     if element.tag == 'node':
+        node_attribs={k:element.attrib.get(k,None) for k in node_attr_fields}
+        tags=parse_tags(element.attrib.get('id',None),element.findall('./tag'))
         return {'node': node_attribs, 'node_tags': tags}
+
     elif element.tag == 'way':
+        way_attribs={k:element.attrib.get(k,None) for k in way_attr_fields}
+        tags=parse_tags(element.attrib.get('id',None),element.findall('./tag'))
+        way_nodes=parse_way_nodes(element.attrib.get('id',None),element.findall('./nd'))
         return {'way': way_attribs, 'way_nodes': way_nodes, 'way_tags': tags}
 
 
