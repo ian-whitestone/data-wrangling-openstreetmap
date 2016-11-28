@@ -31,10 +31,6 @@ WAY_NODES_FIELDS = ['id', 'node_id', 'position']
 
 
 def parse_tags(id,tags):
-    tag_fields=['id', 'key', 'value', 'type'] ##check what type is?
-    tag_fields = ['k','v']
-    ##- type: either the characters before the colon in the tag "k" value or "regular" if a colon is not present.
-
     tags_list=[]
     for tag in tags:
         tag_type=tag.attrib.get('k','regular')
@@ -54,7 +50,7 @@ def parse_way_nodes(id,nodes):
     WAY_NODES_FIELDS = ['id', 'node_id', 'position']
     nodes_list=[]
 
-    for i,nd in enumerate(nodes):
+    for i,nd in enumerate(nodes): ##i represents the nodes order
         nodes_list.append({'id':id,'node_id':nd.attrib.get('ref',None),'position':i})
 
     return nodes_list
