@@ -11,11 +11,11 @@ import schema
 
 OSM_PATH = "toronto_map.osm"
 
-NODES_PATH = "nodes.csv"
-NODE_TAGS_PATH = "nodes_tags.csv"
-WAYS_PATH = "ways.csv"
-WAY_NODES_PATH = "ways_nodes.csv"
-WAY_TAGS_PATH = "ways_tags.csv"
+NODES_PATH = "csv/nodes.csv"
+NODE_TAGS_PATH = "csv/nodes_tags.csv"
+WAYS_PATH = "csv/ways.csv"
+WAY_NODES_PATH = "csv/ways_nodes.csv"
+WAY_TAGS_PATH = "csv/ways_tags.csv"
 
 LOWER_COLON = re.compile(r'^([a-z]|_)+:([a-z]|_)+')
 PROBLEMCHARS = re.compile(r'[=\+/&<>;\'"\?%#$@\,\. \t\r\n]')
