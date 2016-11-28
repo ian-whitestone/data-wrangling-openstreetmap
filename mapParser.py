@@ -30,19 +30,27 @@ WAY_TAGS_FIELDS = ['id', 'key', 'value', 'type']
 WAY_NODES_FIELDS = ['id', 'node_id', 'position']
 
 
-def parse_tags(id,tags):
+def parse_tags(id,tags,problem_chars=PROBLEMCHARS):
     tags_list=[]
+
     for tag in tags:
         tag_type=tag.attrib.get('k','regular')
-        split_tag=tag_type.split(':')
-        if len(split_tag)==1:
-            tag_type='regular'
-            key=tag.attrib.get('k',None)
-        else:
-            tag_type=split_tag[0]
-            key=':'.join(split_tag[1:])
+        m = problem_chars.search(tag_type)
+        if m: ##if there are probably tags..
+            continue
 
-        tags_list.append({'id':id,'key':key,'value':tag.attrib.get('v',None),'type':tag_type})
+        else:
+            split_tag=tag_type.split(':')
+
+            if len(split_tag)==1:
+                tag_type='regular'
+                key=tag.attrib.get('k',None)
+
+            else:
+                tag_type=split_tag[0]
+                key=':'.join(split_tag[1:])
+
+            tags_list.append({'id':id,'key':key,'value':tag.attrib.get('v',None),'type':tag_type})
 
     return tags_list
 
@@ -56,7 +64,7 @@ def parse_way_nodes(id,nodes):
     return nodes_list
 
 def shape_element(element, node_attr_fields=NODE_FIELDS, way_attr_fields=WAY_FIELDS,
-                  problem_chars=PROBLEMCHARS, default_tag_type='regular'):
+                  default_tag_type='regular'):
     """Clean and shape node or way XML element to Python dict"""
 
     node_attribs = {}
