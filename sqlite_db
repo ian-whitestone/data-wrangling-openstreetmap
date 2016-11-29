@@ -1,6 +1,6 @@
 .mode csv
-.import nodes.csv nodes
-.import nodes_tags.csv nodes_tags
-.import ways.csv ways
-.import ways_nodes.csv ways_nodes
-.import ways_tags.csv ways_tags 
+.import csv/nodes.csv nodes
+.import csv/nodes_tags.csv nodes_tags
+.import csv/ways.csv ways
+.import csv/ways_nodes.csv ways_nodes
+.import csv/ways_tags.csv ways_tags

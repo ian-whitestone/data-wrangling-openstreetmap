@@ -14,11 +14,16 @@ For this project I selected a section of downtown [Toronto, Ontario, Canada](htt
 
 
 ## Data Auditing
+1) problematic characters
+(look into regular expression and what it searches for)
+575248144 tag {'v': 'yes', 'k': 'just-eat.ca'}
+
+2) street names
 
 
 ## Data Overview
 
-size of the file
-number of unique users
-number of nodes and ways
-number of chosen type of nodes, like cafes, shops etc.
+* size of the file
+* number of unique users
+* number of nodes and ways
+* number of chosen type of nodes, like cafes, shops etc.

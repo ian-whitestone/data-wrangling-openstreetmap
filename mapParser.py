@@ -29,6 +29,20 @@ WAY_FIELDS = ['id', 'user', 'uid', 'version', 'changeset', 'timestamp']
 WAY_TAGS_FIELDS = ['id', 'key', 'value', 'type']
 WAY_NODES_FIELDS = ['id', 'node_id', 'position']
 
+def convert_fields(base_dict):
+    field_map={'id':'int', 'lat':'float', 'lon':'float', 'user':'str',
+            'uid':'int', 'version':'int', 'changeset':'int', 'timestamp':'str',
+            'key':'str','value':'str','type':'str','node_id':'int','position':'int'}
+    converted={}
+    for k,v in base_dict.items():
+        if field_map[k]=='str':
+            converted[k]=str(v)
+        elif field_map[k]=='int':
+            converted[k]=int(v)
+        elif field_map[k]=='float':
+            converted[k]=float(v)
+        # if isinstance(v, str)
+    return converted
 
 def parse_tags(id,tags,problem_chars=PROBLEMCHARS):
     tags_list=[]
@@ -50,16 +64,17 @@ def parse_tags(id,tags,problem_chars=PROBLEMCHARS):
                 tag_type=split_tag[0]
                 key=':'.join(split_tag[1:])
 
-            tags_list.append({'id':id,'key':key,'value':tag.attrib.get('v',None),'type':tag_type})
+            tag_dict=convert_fields({'id':id,'key':key,'value':tag.attrib.get('v',None),'type':tag_type})
+            tags_list.append(tag_dict)
 
     return tags_list
 
 def parse_way_nodes(id,nodes):
-    WAY_NODES_FIELDS = ['id', 'node_id', 'position']
     nodes_list=[]
 
     for i,nd in enumerate(nodes): ##i represents the nodes order
-        nodes_list.append({'id':id,'node_id':nd.attrib.get('ref',None),'position':i})
+        base_dict={'id':id,'node_id':nd.attrib.get('ref',None),'position':i}
+        nodes_list.append(convert_fields(base_dict))
 
     return nodes_list
 
@@ -73,12 +88,14 @@ def shape_element(element, node_attr_fields=NODE_FIELDS, way_attr_fields=WAY_FIE
     tags = []  # Handle secondary tags the same way for both node and way elements
 
     if element.tag == 'node':
-        node_attribs={k:element.attrib.get(k,None) for k in node_attr_fields}
-        tags=parse_tags(element.attrib.get('id',None),element.findall('./tag'))
+        base_dict={k:element.attrib.get(k,None) for k in node_attr_fields}
+        node_attribs=convert_fields(base_dict)
+        tags=parse_tags(int(element.attrib.get('id',None)),element.findall('./tag'))
         return {'node': node_attribs, 'node_tags': tags}
 
     elif element.tag == 'way':
-        way_attribs={k:element.attrib.get(k,None) for k in way_attr_fields}
+        base_dict={k:element.attrib.get(k,None) for k in way_attr_fields}
+        way_attribs=convert_fields(base_dict)
         tags=parse_tags(element.attrib.get('id',None),element.findall('./tag'))
         way_nodes=parse_way_nodes(element.attrib.get('id',None),element.findall('./nd'))
         return {'way': way_attribs, 'way_nodes': way_nodes, 'way_tags': tags}
@@ -112,10 +129,10 @@ class UnicodeDictWriter(csv.DictWriter, object):
     """Extend csv.DictWriter to handle Unicode input"""
 
     def writerow(self, row):
-        super(UnicodeDictWriter, self).writerow({
-            k: (v.encode('utf-8') if isinstance(v, str) else v) for k, v in row.items()
-        })
-
+        # super(UnicodeDictWriter, self).writerow({
+        #     k: (v.encode('utf-8') if isinstance(v, str) else v) for k, v in row.items()
+        # })
+        super(UnicodeDictWriter, self).writerow({k: v for k, v in row.items()})
     def writerows(self, rows):
         for row in rows:
             self.writerow(row)
@@ -139,11 +156,11 @@ def process_map(file_in, validate):
         way_nodes_writer = UnicodeDictWriter(way_nodes_file, WAY_NODES_FIELDS)
         way_tags_writer = UnicodeDictWriter(way_tags_file, WAY_TAGS_FIELDS)
 
-        nodes_writer.writeheader()
-        node_tags_writer.writeheader()
-        ways_writer.writeheader()
-        way_nodes_writer.writeheader()
-        way_tags_writer.writeheader()
+        # nodes_writer.writeheader()
+        # node_tags_writer.writeheader()
+        # ways_writer.writeheader()
+        # way_nodes_writer.writeheader()
+        # way_tags_writer.writeheader()
 
         validator = cerberus.Validator()
 
