@@ -43,6 +43,36 @@ sqlite> SELECT count(distinct uid) FROM (SELECT uid FROM nodes UNION ALL SELECT 
 
 ## Top 10 Contributing Users
 
+``` sql
+sqlite> SELECT uid,count(*) AS num_contributions
+FROM (SELECT uid FROM nodes UNION ALL SELECT uid FROM ways) a
+GROUP BY 1
+ORDER BY num_contributions DESC
+LIMIT 10;
+
+```
+
+```
+user,num_contributions
+1679,335811
+40964,55926
+3551880,15019
+1060930,6434
+1108251,4254
+3151933,2915
+1964104,2878
+19492,2505
+30035,2006
+158267,1989
+```
+
+To appreciate the the difference between the top 10 users, a bar plot is included below.
+
+<p align="center">
+  <img src=images/top_10_users.png alt="toronto_area" style="width: 450px;" style="height: 450px;" />
+</p>
+
+
 
 ## Number of Nodes
 
