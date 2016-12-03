@@ -32,7 +32,10 @@ For this project I selected a section of downtown [Toronto, Ontario, Canada](htt
 
 ## Number of Unique Users
 
-`sqlite> SELECT count(distinct uid) FROM (SELECT uid FROM nodes UNION ALL SELECT uid FROM ways) a;`
+`
+sqlite> SELECT count(distinct uid) FROM (SELECT uid FROM nodes UNION ALL SELECT uid FROM ways) a;
+
+`
 
 `770`
 
@@ -41,8 +44,9 @@ For this project I selected a section of downtown [Toronto, Ontario, Canada](htt
 
 ## Number of Nodes
 
-`
+`                     
 sqlite> select count(id) from nodes;
+
 `
 
 388107
@@ -58,4 +62,4 @@ sqlite> select count(id) from ways;
 
 * number of chosen type of nodes, like cafes, shops etc.
 
-## Conclusion 
+## Conclusion
