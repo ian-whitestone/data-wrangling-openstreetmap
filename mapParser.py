@@ -19,6 +19,7 @@ WAY_TAGS_PATH = "csv/ways_tags.csv"
 
 LOWER_COLON = re.compile(r'^([a-z]|_)+:([a-z]|_)+')
 PROBLEMCHARS = re.compile(r'[=\+/&<>;\'"\?%#$@\,\. \t\r\n]')
+STREET_TYPE_RE = re.compile(r'\b\S+\.?$', re.IGNORECASE)
 
 SCHEMA = schema.schema
 
@@ -28,6 +29,22 @@ NODE_TAGS_FIELDS = ['id', 'key', 'value', 'type']
 WAY_FIELDS = ['id', 'user', 'uid', 'version', 'changeset', 'timestamp']
 WAY_TAGS_FIELDS = ['id', 'key', 'value', 'type']
 WAY_NODES_FIELDS = ['id', 'node_id', 'position']
+
+EXPECTED_STREETS = ["Street", "Avenue", "Boulevard", "Drive", "Court", "Place", "Square", "Lane", "Road",
+            "Trail", "Parkway", "Commons","Crescent","Close","East","West","North","South","Way","Terrace"]
+
+STREET_NAME_MAP = { "St": "Street",
+                    "St.": "Street",
+                    "Blvd": "Boulevard",
+                    "Ave": "Avenue",
+                    "Ave.": "Avenue",
+                    "Rd": "Road",
+                    "STREET": "Street",
+                    "avenue": "Avenue",
+                    "street": "Street",
+                    "E": "East",
+                    "W": "West"
+                    }
 
 def convert_fields(base_dict):
     """
@@ -50,6 +67,71 @@ def convert_fields(base_dict):
             converted[k]=float(v)
         # if isinstance(v, str)
     return converted
+
+def is_postal_code(tag_dict):
+    return (tag_dict['key'] == 'postcode')
+
+def is_street_name(tag_dict):
+    return (tag_dict['key'] == 'street')
+
+def clean_postal(postal_code):
+    char_type = {1:0,2:1,3:0,4:1,5:0,6:1} ##1 if integer, 0 if alphabetical
+
+    postal_code = "".join(postal_code.split()) ##remove all spaces
+    postal_code = postal_code.upper() ##convert to upper case
+
+    if len(postal_code)==6:
+        pass
+    else:
+        return
+
+    for i,s in enumerate(postal_code):
+        check = (1 if s.isdigit() else 0)
+        if check == char_type[i+1]:
+            continue
+        else:
+            return
+    return postal_code
+
+def clean_street(street_name,expected=EXPECTED_STREETS,street_type_re=STREET_TYPE_RE):
+    m = street_type_re.search(street_name)
+    if m:
+        street_type = m.group()
+        if street_type not in expected:
+            return update_street_name(street_name)
+        else:
+            return street_name
+
+    return street_name
+
+def update_street_name(street_name,street_name_mapping=STREET_NAME_MAP):
+    street_words = street_name.split()
+
+    updated_street_words=[]
+    for w in street_words:
+        try:
+            w = street_name_mapping[w]
+        except:
+            pass
+        updated_street_words.append(w)
+
+    return " ".join(updated_street_words)
+
+
+def clean_tag_dict(tag_dict):
+    if is_postal_code(tag_dict):
+        postal_code=clean_postal(tag_dict['value'])
+        if postal_code:
+            tag_dict['value']= postal_code ##update postal code in tag_dict
+        else:
+            return False
+    if is_street_name(tag_dict):
+        street_name=clean_street(tag_dict['value'])
+        if street_name:
+            tag_dict['value'] = street_name ##update street name in tag_dict
+        else:
+            return False
+    return tag_dict
 
 def parse_tags(id,tags,problem_chars=PROBLEMCHARS):
     """
@@ -77,7 +159,11 @@ def parse_tags(id,tags,problem_chars=PROBLEMCHARS):
                 key=':'.join(split_tag[1:])
 
             tag_dict=convert_fields({'id':id,'key':key,'value':tag.attrib.get('v',None),'type':tag_type})
-            tags_list.append(tag_dict)
+            cleaned_tag_dict=clean_tag_dict(tag_dict)
+            if cleaned_tag_dict:
+                tags_list.append(tag_dict)
+            else: ##if the tag_dict has a bad postal code or street name, don't add it
+                continue
 
     return tags_list
 
