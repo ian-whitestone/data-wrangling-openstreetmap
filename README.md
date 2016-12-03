@@ -30,20 +30,32 @@ For this project I selected a section of downtown [Toronto, Ontario, Canada](htt
   + toronto_map.osm --> 99 MB
   + toronto.db      --> 55 MB
 
-* number of unique users
+## Number of Unique Users
 
 `sqlite> SELECT count(distinct uid) FROM (SELECT uid FROM nodes UNION ALL SELECT uid FROM ways) a;`
 
 `770`
 
-* number of nodes and ways
+## Top 10 Contributing Users
 
-`sqlite> select count(id) from nodes;`
 
-`388107`
+## Number of Nodes
 
-`sqlite> select count(id) from ways;`
+`
+sqlite> select count(id) from nodes;
+`
 
-`72454`
+388107
+
+## Number of Ways
+
+`
+sqlite> select count(id) from ways;
+
+`
+
+72454
 
 * number of chosen type of nodes, like cafes, shops etc.
+
+## Conclusion 
