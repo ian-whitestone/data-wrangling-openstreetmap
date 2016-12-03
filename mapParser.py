@@ -30,6 +30,13 @@ WAY_TAGS_FIELDS = ['id', 'key', 'value', 'type']
 WAY_NODES_FIELDS = ['id', 'node_id', 'position']
 
 def convert_fields(base_dict):
+    """
+    Returns dictionary with the same keys and converted values
+
+    <base_dict> : basic {key:value} dict containing only keys that are present in field_map
+
+    """
+
     field_map={'id':'int', 'lat':'float', 'lon':'float', 'user':'str',
             'uid':'int', 'version':'int', 'changeset':'int', 'timestamp':'str',
             'key':'str','value':'str','type':'str','node_id':'int','position':'int'}
@@ -45,21 +52,26 @@ def convert_fields(base_dict):
     return converted
 
 def parse_tags(id,tags,problem_chars=PROBLEMCHARS):
+    """
+    Returns a list of tag dicts with the keys: id,key,value,type
+    Searches for problematic characters in the tag key. If present, tag is not returned.
+
+    <id> integer id of the node/way
+    <tags> list of tags
+    <problem_chars> regular expression with problem characters to search for
+    """
     tags_list=[]
 
     for tag in tags:
         tag_type=tag.attrib.get('k','regular')
         m = problem_chars.search(tag_type)
-        if m: ##if there are probably tags..
+        if m: ##if there are problem tags..
             continue
-
         else:
             split_tag=tag_type.split(':')
-
             if len(split_tag)==1:
                 tag_type='regular'
                 key=tag.attrib.get('k',None)
-
             else:
                 tag_type=split_tag[0]
                 key=':'.join(split_tag[1:])
@@ -70,6 +82,11 @@ def parse_tags(id,tags,problem_chars=PROBLEMCHARS):
     return tags_list
 
 def parse_way_nodes(id,nodes):
+    """
+    Returns a list of node dicts with the keys [id,node_id,position]
+    <id> integer id of the way
+    <nodes> list of nodes
+    """
     nodes_list=[]
 
     for i,nd in enumerate(nodes): ##i represents the nodes order
