@@ -192,6 +192,12 @@ FROM
 GROUP BY 1;
 ```
 
+```
+postal_char,count
+K,1
+M,1395
+m,1
+```
 
 368947582,city,Toronto,addr
 368947582,housenumber,398,addr
@@ -205,6 +211,7 @@ def clean_postal(postal_code):
     char_type = {1:0,2:1,3:0,4:1,5:0,6:1} ##1 if integer, 0 if alphabetical
 
     postal_code="".join(postal_code.split()) ##remove all spaces
+    postal_code = postal_code.upper() ##convert to upper case
 
     if len(postal_code)==6:
         pass
@@ -335,8 +342,16 @@ SELECT count(id) FROM ways;
 
 72454
 
-### Most Common Ways Tags
+### Most Common Way Tags
+```sql
+SELECT key,count(*)
+FROM ways_tags
+GROUP BY 1
+ORDER BY count(*) DESC
+LIMIT 10;
+```
 
+```
 source,40284
 highway,24179
 interpolation,19612
@@ -347,8 +362,18 @@ lanes,11077
 access,6659
 service,4118
 street,3873
+```
 
-### Most Common Nodes Tags
+### Most Common Node Tags
+```sql
+SELECT key,count(*)
+FROM nodes_tags
+GROUP BY 1
+ORDER BY count(*) DESC
+LIMIT 10;
+```
+
+```
 street,45451
 housenumber,45431
 source,43160
@@ -359,8 +384,42 @@ amenity,8237
 country,5622
 created_by,5340
 operator,3848
+```
 
-* number of chosen type of nodes, like cafes, shops etc.
+### Most Common Amenities
+
+```sql
+SELECT value,count(*)
+FROM nodes_tags
+WHERE key='amenity'
+GROUP BY 1
+ORDER BY count(*) DESC
+LIMIT 20;
+
+```
+
+```
+restaurant,919
+fast_food,844
+bench,788
+cafe,553
+post_box,550
+parking,450
+bicycle_parking,329
+waste_basket,307
+bank,278
+vending_machine,235
+waste_basket;recycling,233
+telephone,223
+recycling,186
+pharmacy,177
+pub,152
+bicycle_rental,124
+relay_box,122
+dentist,121
+car_sharing,91
+place_of_worship,91
+```
 
 ## Conclusion
 
