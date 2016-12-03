@@ -20,10 +20,30 @@ For this project I selected a section of downtown [Toronto, Ontario, Canada](htt
 
 2) street names
 
+3) postal codes
+
+4)
 
 ## Data Overview
 
 * size of the file
+  + toronto_map.osm --> 99 MB
+  + toronto.db      --> 55 MB
+
 * number of unique users
+
+`sqlite> SELECT count(distinct uid) FROM (SELECT uid FROM nodes UNION ALL SELECT uid FROM ways) a;`
+
+`770`
+
 * number of nodes and ways
+
+`sqlite> select count(id) from nodes;`
+
+`388107`
+
+`sqlite> select count(id) from ways;`
+
+`72454`
+
 * number of chosen type of nodes, like cafes, shops etc.
