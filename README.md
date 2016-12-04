@@ -318,7 +318,7 @@ Don Mills is not a city, and to some people's surprise, neither is "Torontoitial
 
 ## Data Overview
 
-With the cleaned dataset, a final set of queries are performed to explore the data.
+With the cleaned dataset, a final set of queries were performed to explore the data.
 
 ### File Sizes
 ```
@@ -476,4 +476,4 @@ It is clear that a significant effort has been undertaken by various users to co
 
 Some anticipated problems with implementing such changes would be rules that are too restrictive and end up blocking valid values. Additionally, such rules could discourage users from contributing data due to the added difficulty.
 
-For future work, it is recommended to implement more regular expressions to perform the data validation and cleaning, rather than the hard-coded values that were used in mapParser.py.
+For future work, it is recommended to implement more regular expressions to perform the data validation and cleaning, rather than the hard-coded values/logic that were used in mapParser.py.
