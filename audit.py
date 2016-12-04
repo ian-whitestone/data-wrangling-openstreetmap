@@ -8,11 +8,20 @@ street_type_re = re.compile(r'\b\S+\.?$', re.IGNORECASE)
 
 
 expected = ["Street", "Avenue", "Boulevard", "Drive", "Court", "Place", "Square", "Lane", "Road",
-            "Trail", "Parkway", "Commons"]
+            "Trail", "Parkway", "Commons","Crescent","Close","East","West","North","South","Way","Terrace"]
 
 # UPDATE THIS VARIABLE
 mapping = { "St": "Street",
-            "St.": "Street"
+            "St.": "Street",
+            "Blvd": "Boulevard",
+            "Ave": "Avenue",
+            "Ave.": "Avenue",
+            "Rd": "Road",
+            "STREET": "Street",
+            "avenue": "Avenue",
+            "street": "Street",
+            "E": "East",
+            "W": "West"
             }
 
 
@@ -37,6 +46,8 @@ def audit(osmfile):
             for tag in elem.iter("tag"):
                 if is_street_name(tag):
                     audit_street_type(street_types, tag.attrib['v'])
+                    print (street_types)
+                    break
     osm_file.close()
     return street_types
 
