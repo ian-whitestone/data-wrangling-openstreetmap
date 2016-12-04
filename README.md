@@ -15,6 +15,8 @@ For this project I selected a section of downtown [Toronto, Ontario, Canada](htt
 
 ## Data Auditing
 
+After storing the un-cleaned data in a sqlite database, it was explored and audited for quality and completeness. Four main problems were identified with the data. Each one is explored in more detail below.
+
 1) Problematic Characters
 
 2) Street Names
@@ -25,19 +27,60 @@ For this project I selected a section of downtown [Toronto, Ontario, Canada](htt
 
 ### Problematic Characters
 
-575248144 tag {'v': 'yes', 'k': 'just-eat.ca'}
+Certain tags were found to contain problematic characters. These characters can result in messy values that are either hard to read or process programatically. In order to exclude such tags from the dataset, a python regular expression was used.
 
 `re.compile(r'[=\+/&<>;\'"\?%#$@\,\. \t\r\n]')`
 
-The actual regular exprresion `[=\+/&<>;\'"\?%#$@\,\. \t\r\n]` looks for new lines, tabs, commas, single/double quotes, semi-colons, equal signs or characters like %,?,%,$,@,#
+The actual regular expression `[=\+/&<>;\'"\?%#$@\,\. \t\r\n]` looks for new lines, tabs, commas, single/double quotes, semi-colons, equal signs or characters like %,?,%,$,@,#. If any of these characters are found in the tags key, it is not included. An example of a problematic string is from the tag shown below, with a period in 'just-eat.ca'.
+
+{'v': 'yes', 'k': 'just-eat.ca'}
 
 ### Street Names
+Using a list of expected street names (i.e. "Street", "Avenue", "Boulevard", "Drive", "Court", "Place", "Square", "Lane", "Road"), the street names present in the Toronto OSM data were audited for irregularities. The [audit.py](https://github.com/ian-whitestone/data-wrangling-openstreetmap/blob/master/audit.py) script was used to identify street names that did not contain these expected values.
 
+An iterative process was performed where additional street names were added to the list of expected names. Other common names not included in the original list were "Crescent","Close","Way","Terrace". In Toronto, many streets are identified by their quadrant in the city. For example, Queen Street will either appear as Queen Street West or Queen Street East. As a result, the key words "East","West","North","South" were also added to the list of expected street names.
 
-- parks under street tags
+Another interesting quirk in the data was the inclusion of city parks as streets. For example, Trinity Bellwoods Park was tagged as a street name, despite their being no such street in Toronto.
+
+After this process was completed, a final list of problematic names were identified and a dictionary was created for cleaning.
+
+```javascript
+{ "St": "Street","St.": "Street","Blvd": "Boulevard","Ave": "Avenue","Ave.": "Avenue","Rd": "Road","STREET": "Street","avenue": "Avenue","street": "Street","E": "East","W": "West"}
+```
+
+Two python functions were created to identify bad street names and update them accordingly.
 
 ```python
+def clean_postal(postal_code):
+    """
+    removes whitespaces from postal code, ensure it is the correct length and format
+    <postal_code> postal code in the raw format
+    """
+    char_type = {1:0,2:1,3:0,4:1,5:0,6:1} ##1 if integer, 0 if alphabetical
+
+    postal_code = "".join(postal_code.split()) ##remove all spaces
+    postal_code = postal_code.upper() ##convert to upper case
+
+    if len(postal_code)==6:
+        pass
+    else:
+        return
+
+    for i,s in enumerate(postal_code):
+        check = (1 if s.isdigit() else 0)
+        if check == char_type[i+1]:
+            continue
+        else:
+            return
+    return postal_code
+
 def clean_street(street_name,expected=EXPECTED_STREETS,street_type_re=STREET_TYPE_RE):
+    """
+    searches street name for expected key words, if missing, passes street name into update_street_name()
+    <street name> name of street
+    <expected> list of expected street names/key words
+    <street_type_re> regular expression used to search the street name
+    """
     m = street_type_re.search(street_name)
     if m:
         street_type = m.group()
@@ -47,19 +90,6 @@ def clean_street(street_name,expected=EXPECTED_STREETS,street_type_re=STREET_TYP
             return street_name
 
     return street_name
-
-def update_street_name(street_name,street_name_mapping=STREET_NAME_MAP):
-    street_words = street_name.split()
-
-    updated_street_words=[]
-    for w in street_words:
-        try:
-            w = street_name_mapping[w]
-        except:
-            pass
-        updated_street_words.append(w)
-
-    return " ".join(updated_street_words)
 ```
 
 ### Postal Codes
@@ -75,8 +105,6 @@ ORDER BY count(*) DESC;
 
 ```
 
-In Canada, postal codes are 6 unique characters, and are commonly formatted as "A1A 1A1" or "A1A1A1"
-
 ```
 num_chars,count
 7,760
@@ -86,13 +114,14 @@ num_chars,count
 16,1
 ```
 
-8 chars: trailing space
-3602419558,postcode,"M4X 1P3‬ ",addr
+In Canada, postal codes are 6 unique characters, and are commonly formatted as "A1A 1A1" or "A1A1A1". As a result, both 6 and 7 character length strings are expected. The query above returned some postal codes that were 8,3 and 16 characters long.
 
-16 chars
-152659345,postcode,"M5T 1R9, M1P 2L7",addr
+The 8 character postal codes were due to trailing spaces (ex. "M4X 1P3‬ ").
+The 16 character postal code actually contained 2 postal codes "M5T 1R9, M1P 2L7".
 
-Easiest solution is to use the Python `strip()` function to remove all spaces from the postal codes. The 3 character and 16 characters postal codes cannot be cleaned in any way, so they should be ignored.
+The easiest solution is to use the Python `split()` function to remove all spaces from the postal codes. The 3 character and 16 characters postal codes cannot be cleaned in any way, so they should be ignored.
+
+Using the known format of the Canadian postal code, the strings are further audited.
 
 ```sql
 --the 2nd, 4th and 6th digits of the postal codes should all be integers.
@@ -114,7 +143,6 @@ FROM
 GROUP BY 1;
 ```
 
-As expected, only integers are present in these
 ```
 postal_char,count
 0,37
@@ -130,7 +158,7 @@ postal_char,count
 G,1
 ```
 
-146040705,postcode,"M5J 2G",addr
+As expected, only integers are present, with the exception of one 'G'. This was actually the result of an incomplete postal code "M5J 2G".
 
 ```sql
 --the 1st,3rd and 5th digits of the postal code should all be alphabetical characters
@@ -151,7 +179,6 @@ FROM
 )
 GROUP BY 1;
 ```
-
 
 ```
 postal_char,count
@@ -181,6 +208,10 @@ m,1
 x,1
 ```
 
+As expected, only letters were present, with the exception of one '2' from the postal code "M5J 2G". Some lower case letters are present which should be converted.
+
+The first character of a postal code represents a large area in the city.
+
 ```sql
 SELECT postal_char,count(*)
 FROM
@@ -199,15 +230,24 @@ M,1395
 m,1
 ```
 
+With the exception of one postal code, all codes start with "M" as expected. The postal code starting with "K" is actually from Orleans, Ontario, a city near Ottawa, Ontario. This was clearly a mistake as the user was attempting to enter the postal code for 398 Palmerston Boulevard, a valid address in Toronto.
+```
 368947582,city,Toronto,addr
 368947582,housenumber,398,addr
 368947582,postcode,"K4A 1W9",addr
 368947582,province,Ontario,addr
 368947582,street,"Palmerston Boulevard",addr
 368947582,landuse,residential,regular
+```
+
+A function was created to clean the postal codes based on the results found above.
 
 ```python
 def clean_postal(postal_code):
+    """
+    removes whitespaces from postal code, convert to upper case, ensure it is the correct length and format
+    <postal_code> postal code in the raw format
+    """
     char_type = {1:0,2:1,3:0,4:1,5:0,6:1} ##1 if integer, 0 if alphabetical
 
     postal_code="".join(postal_code.split()) ##remove all spaces
@@ -226,7 +266,7 @@ def clean_postal(postal_code):
             return
     return postal_code
 
-
+###validate the function is working as expected
 >>> print (clean_postal('M9Z 1D5'))
 M9Z1D5
 >>> print (clean_postal('M9Z 1D'))
@@ -236,6 +276,8 @@ None
 ```
 
 ### Cities & Provinces
+
+The main city and province in the dataset should be Toronto, Ontario.
 
 ```sql
 SELECT value,count(*)
@@ -267,9 +309,16 @@ on,1
 ontario,2
 ```
 
+As shown above, there is clearly some inconsistent naming of the same city/province, with names like "City of Toronto","toronto","Toronto","on" etc. Some spelling mistakes are also present.
+
+York, North York and East York are all former municipalities or districts within the current city of Toronto. It is up to debate whether these should be tagged at "cities".
+
+Don Mills is not a city, and to some people's surprise, neither is "Torontoitialian".
 
 
 ## Data Overview
+
+With the cleaned dataset, a final set of queries are performed to explore the data.
 
 ### File Sizes
 ```
@@ -423,11 +472,8 @@ place_of_worship,91
 
 ## Conclusion
 
+It is clear that a significant effort has been undertaken by various users to contribute data to the Toronto OSM area. To ensure accurate data is entered, I believe OSM should implement some data quality rules that restrict the data that can be entered. For example, they could include postal code rules (i.e. number of characters, character format (integer vs. alphabetical charactr at certain positions)) based on the known postal format of the country. With cities and provinces, similar rules/restrictions could be put in place to ensure that users enter cities/provinces that actually exist. This could easily be checked against a database of existing cities and provinces for each country.
 
-suggestions
-- postal code audting while entering (consistent formatting)
-- city/province auditing while editing (make sure cities exist, consistent formatting )
+Some anticipated problems with implementing such changes would be rules that are too restrictive and end up blocking valid values. Additionally, such rules could discourage users from contributing data due to the added difficulty.
 
-Problems with above could be that it's too restrictive and blocks real values, or discourages users to participate..
-
-Use regular expressions for auditing - more robust than hardcoded searches.
+For future work, it is recommended to implement more regular expressions to perform the data validation and cleaning, rather than the hard-coded values that were used in mapParser.py.
